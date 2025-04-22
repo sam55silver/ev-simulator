@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useCallback,
   useState,
   ReactNode,
 } from "react";
@@ -20,8 +21,10 @@ interface WebSocketContextType {
 
 interface Device {
   id: string;
-  status: "charging" | "idle" | "offline";
-  currentPower?: number;
+  status: "available" | "charging" | "error";
+  power_level: number;
+  total_energy: number;
+  connected_at: string;
 }
 
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
@@ -31,7 +34,11 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   const [connected, setConnected] = useState(false);
   const [devices, setDevices] = useState<Device[]>([]);
 
-  useEffect(() => {
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 5;
+  const DELAY = 1000;
+
+  const connectWebSocket = useCallback(() => {
     const ws = new WebSocket("ws://localhost:4000/devices/websocket");
 
     ws.onopen = () => {
@@ -52,6 +59,13 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     ws.onclose = () => {
       console.log("Disconnected from supervisor");
       setConnected(false);
+
+      if (retryCount < MAX_RETRIES) {
+        setTimeout(() => {
+          setRetryCount((prev) => prev + 1);
+          connectWebSocket();
+        }, DELAY * Math.pow(2, retryCount));
+      }
     };
 
     ws.onmessage = (event) => {
@@ -70,6 +84,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
           setDevices(data.payload.devices);
           break;
         case "device_update":
+          console.log("Received device update:", data.payload);
           setDevices((prevDevices) => {
             const updatedDevice = data.payload;
             const deviceExists = prevDevices.some(
@@ -93,7 +108,11 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       ws.close();
     };
-  }, []);
+  }, [retryCount]);
+
+  useEffect(() => {
+    connectWebSocket();
+  }, [connectWebSocket]);
 
   const startDevice = (deviceId: string) => {
     socket?.send(
