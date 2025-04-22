@@ -8,8 +8,7 @@ defmodule ChargerDevice.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: ChargerDevice.Worker.start_link(arg)
-      # {ChargerDevice.Worker, arg}
+      {Registry, keys: :unique, name: ChargerDevice.Registry}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
