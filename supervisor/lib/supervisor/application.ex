@@ -13,6 +13,9 @@ defmodule Supervisor.Application do
       # Start the device supervisor
       Supervisor.DeviceSupervisor,
 
+      # Start the heartbeat manager
+      Supervisor.HeartbeatManager,
+
       # Start the Endpoint with proper configuration
       {Supervisor.Endpoint, []}
     ]

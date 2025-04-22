@@ -1,11 +1,12 @@
 defmodule Supervisor.DeviceChannel do
   use Phoenix.Channel
   require Logger
+  alias Supervisor.DeviceState
 
   def join("devices:lobby", _payload, socket) do
     # Subscribe to device updates
     Phoenix.PubSub.subscribe(Supervisor.PubSub, "devices")
-    {:ok, %{devices: get_all_devices_state()}, socket}
+    {:ok, %{devices: DeviceState.get_all_devices_state()}, socket}
   end
 
   def handle_in("start_device", %{"device_id" => device_id}, socket) do
@@ -61,7 +62,7 @@ defmodule Supervisor.DeviceChannel do
     end)
 
     # Broadcast updated device list
-    broadcast!(socket, "all_devices", %{devices: get_all_devices_state()})
+    broadcast!(socket, "all_devices", %{devices: DeviceState.get_all_devices_state()})
     {:reply, :ok, socket}
   end
 
@@ -70,21 +71,8 @@ defmodule Supervisor.DeviceChannel do
   end
 
   # Handle device updates from PubSub
-  def handle_info({:device_update, state}, socket) do
-    push(socket, "device_update", state)
+  def handle_info({:all_devices, %{devices: devices}}, socket) do
+    broadcast!(socket, "all_devices", %{devices: devices})
     {:noreply, socket}
-  end
-
-  # Private function to get all devices state
-  defp get_all_devices_state do
-    Registry.select(Supervisor.DeviceRegistry, [
-      {{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2", :"$3"}}]}
-    ])
-    |> Enum.map(fn {device_id, _pid, _} ->
-      case Supervisor.Device.get_state(device_id) do
-        state when is_map(state) -> state
-        _ -> %{id: device_id, status: "offline"}
-      end
-    end)
   end
 end

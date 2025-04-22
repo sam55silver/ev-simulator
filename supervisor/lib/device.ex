@@ -51,7 +51,6 @@ defmodule Supervisor.Device do
     if state.status == :available do
       # Set a random power level between 0 and 7.2kW
       new_state = %{state | status: :charging, power_level: 7.2 * :rand.uniform()}
-      broadcast_state_change(new_state)
       {:noreply, new_state}
     else
       {:noreply, state}
@@ -62,7 +61,6 @@ defmodule Supervisor.Device do
   def handle_cast(:stop_charging, state) do
     if state.status == :charging do
       new_state = %{state | status: :available, power_level: 0.0}
-      broadcast_state_change(new_state)
       {:noreply, new_state}
     else
       {:noreply, state}
@@ -82,7 +80,6 @@ defmodule Supervisor.Device do
       end
 
     schedule_power_update()
-    broadcast_state_change(new_state)
     {:noreply, new_state}
   end
 
@@ -95,13 +92,5 @@ defmodule Supervisor.Device do
 
   defp via_tuple(device_id) do
     {:via, Registry, {Supervisor.DeviceRegistry, device_id}}
-  end
-
-  defp broadcast_state_change(state) do
-    Phoenix.PubSub.broadcast(
-      Supervisor.PubSub,
-      "devices",
-      {:device_update, state}
-    )
   end
 end

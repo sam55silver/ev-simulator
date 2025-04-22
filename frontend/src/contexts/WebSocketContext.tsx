@@ -63,23 +63,6 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
           case "all_devices":
             setDevices(data.payload.devices);
             break;
-          case "device_update":
-            console.log("Received device update:", data.payload);
-            setDevices((prevDevices) => {
-              const updatedDevice = data.payload;
-              const deviceExists = prevDevices.some(
-                (device) => device.id === updatedDevice.id
-              );
-
-              if (!deviceExists) {
-                return [...prevDevices, updatedDevice];
-              }
-
-              return prevDevices.map((device) =>
-                device.id === updatedDevice.id ? updatedDevice : device
-              );
-            });
-            break;
         }
       },
       onError: (error: Event) => {
