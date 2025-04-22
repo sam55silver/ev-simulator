@@ -52,7 +52,6 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     ws.onclose = () => {
       console.log("Disconnected from supervisor");
       setConnected(false);
-      setDevices([]);
     };
 
     ws.onmessage = (event) => {
