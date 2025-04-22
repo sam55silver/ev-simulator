@@ -15,6 +15,8 @@ interface WebSocketContextType {
   stopDevice: (deviceId: string) => void;
   startCharging: (deviceId: string) => void;
   stopCharging: (deviceId: string) => void;
+  bulkStartCharging: (deviceIds?: string[]) => void;
+  bulkStopCharging: (deviceIds?: string[]) => void;
   getDeviceState: (deviceId: string) => void;
   setDeviceCount: (count: number) => void;
 }
@@ -125,6 +127,30 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
     [sendJsonMessage]
   );
 
+  const bulkStartCharging = useCallback(
+    (deviceIds?: string[]) => {
+      sendJsonMessage({
+        topic: "devices:lobby",
+        event: "bulk_start_charging",
+        payload: deviceIds ? { device_ids: deviceIds } : { all: true },
+        ref: "1",
+      });
+    },
+    [sendJsonMessage]
+  );
+
+  const bulkStopCharging = useCallback(
+    (deviceIds?: string[]) => {
+      sendJsonMessage({
+        topic: "devices:lobby",
+        event: "bulk_stop_charging",
+        payload: deviceIds ? { device_ids: deviceIds } : { all: true },
+        ref: "1",
+      });
+    },
+    [sendJsonMessage]
+  );
+
   const getDeviceState = useCallback(
     (deviceId: string) => {
       sendJsonMessage({
@@ -158,6 +184,8 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
         stopDevice,
         startCharging,
         stopCharging,
+        bulkStartCharging,
+        bulkStopCharging,
         getDeviceState,
         setDeviceCount,
       }}

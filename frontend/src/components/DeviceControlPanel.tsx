@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useWebSocketContext } from "../contexts/WebSocketContext";
 
 export const DeviceControlPanel = () => {
-  const { setDeviceCount, devices, startCharging, stopCharging } =
+  const { setDeviceCount, bulkStartCharging, bulkStopCharging } =
     useWebSocketContext();
   const [deviceCount, setLocalDeviceCount] = useState(20);
 
@@ -16,15 +16,11 @@ export const DeviceControlPanel = () => {
   };
 
   const handleStartAllCharging = () => {
-    devices.forEach((device) => {
-      startCharging(device.id);
-    });
+    bulkStartCharging();
   };
 
   const handleStopAllCharging = () => {
-    devices.forEach((device) => {
-      stopCharging(device.id);
-    });
+    bulkStopCharging();
   };
 
   return (
