@@ -4,7 +4,6 @@ import {
   useCallback,
   useState,
   ReactNode,
-  useEffect,
 } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
 
