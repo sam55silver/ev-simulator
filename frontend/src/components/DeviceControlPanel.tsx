@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { useWebSocket } from "../contexts/WebSocketContext";
+import { useWebSocketContext } from "../contexts/WebSocketContext";
 
 export const DeviceControlPanel = () => {
-  const { setDeviceCount } = useWebSocket();
-  const [deviceCount, setLocalDeviceCount] = useState(0);
+  const { setDeviceCount } = useWebSocketContext();
+  const [deviceCount, setLocalDeviceCount] = useState(20);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const count = parseInt(e.target.value);

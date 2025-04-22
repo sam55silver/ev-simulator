@@ -1,14 +1,14 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useCallback,
   useState,
   ReactNode,
+  useEffect,
 } from "react";
+import useWebSocket, { ReadyState } from "react-use-websocket";
 
 interface WebSocketContextType {
-  socket: WebSocket | null;
   connected: boolean;
   devices: Device[];
   startDevice: (deviceId: string) => void;
@@ -19,7 +19,7 @@ interface WebSocketContextType {
   setDeviceCount: (count: number) => void;
 }
 
-interface Device {
+export interface Device {
   id: string;
   status: "available" | "charging" | "error";
   power_level: number;
@@ -30,160 +30,145 @@ interface Device {
 const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
 export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [connected, setConnected] = useState(false);
   const [devices, setDevices] = useState<Device[]>([]);
 
-  const [retryCount, setRetryCount] = useState(0);
-  const MAX_RETRIES = 5;
-  const DELAY = 1000;
+  useEffect(() => {
+    console.log("Devices:", devices);
+  }, [devices]);
 
-  const connectWebSocket = useCallback(() => {
-    const ws = new WebSocket("ws://localhost:4000/devices/websocket");
-
-    ws.onopen = () => {
-      console.log("Connected to supervisor");
-      setConnected(true);
-
-      // Join the devices channel
-      ws.send(
-        JSON.stringify({
+  const { sendJsonMessage, readyState } = useWebSocket(
+    "ws://localhost:4000/devices/websocket",
+    {
+      onOpen: () => {
+        console.log("Connected to supervisor");
+        // Join the devices channel
+        sendJsonMessage({
           topic: "devices:lobby",
           event: "phx_join",
           payload: {},
           ref: "join",
-        })
-      );
-    };
+        });
+      },
+      onMessage: (event: MessageEvent) => {
+        const data = JSON.parse(event.data);
+        console.log("Received Event:", data.event);
 
-    ws.onclose = () => {
-      console.log("Disconnected from supervisor");
-      setConnected(false);
-
-      if (retryCount < MAX_RETRIES) {
-        setTimeout(() => {
-          setRetryCount((prev) => prev + 1);
-          connectWebSocket();
-        }, DELAY * Math.pow(2, retryCount));
-      }
-    };
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-
-      console.log("Received Event:", data.event);
-
-      switch (data.event) {
-        case "phx_reply":
-          if (data.ref === "join") {
-            console.log("Received reply to join:", data.payload);
-            setDevices(data.payload.response.devices);
-          }
-          break;
-        case "all_devices":
-          setDevices(data.payload.devices);
-          break;
-        case "device_update":
-          console.log("Received device update:", data.payload);
-          setDevices((prevDevices) => {
-            const updatedDevice = data.payload;
-            const deviceExists = prevDevices.some(
-              (device) => device.id === updatedDevice.id
-            );
-
-            if (!deviceExists) {
-              return [...prevDevices, updatedDevice];
+        switch (data.event) {
+          case "phx_reply":
+            if (data.ref === "join") {
+              console.log("Received reply to join:", data.payload);
+              setDevices(data.payload.response.devices);
             }
+            break;
+          case "all_devices":
+            setDevices(data.payload.devices);
+            break;
+          case "device_update":
+            console.log("Received device update:", data.payload);
+            setDevices((prevDevices) => {
+              const updatedDevice = data.payload;
+              const deviceExists = prevDevices.some(
+                (device) => device.id === updatedDevice.id
+              );
 
-            return prevDevices.map((device) =>
-              device.id === updatedDevice.id ? updatedDevice : device
-            );
-          });
-          break;
-      }
-    };
+              if (!deviceExists) {
+                return [...prevDevices, updatedDevice];
+              }
 
-    setSocket(ws);
+              return prevDevices.map((device) =>
+                device.id === updatedDevice.id ? updatedDevice : device
+              );
+            });
+            break;
+        }
+      },
+      onError: (error: Event) => {
+        console.error("WebSocket error:", error);
+      },
+      reconnectAttempts: 5,
+      reconnectInterval: (attemptNumber: number) =>
+        Math.min(1000 * Math.pow(2, attemptNumber), 30000),
+      shouldReconnect: () => true,
+    }
+  );
 
-    return () => {
-      ws.close();
-    };
-  }, [retryCount]);
+  const connected = readyState === ReadyState.OPEN;
 
-  useEffect(() => {
-    connectWebSocket();
-  }, [connectWebSocket]);
-
-  const startDevice = (deviceId: string) => {
-    socket?.send(
-      JSON.stringify({
+  const startDevice = useCallback(
+    (deviceId: string) => {
+      sendJsonMessage({
         topic: "devices:lobby",
         event: "start_device",
         payload: { device_id: deviceId },
         ref: "1",
-      })
-    );
-  };
+      });
+    },
+    [sendJsonMessage]
+  );
 
-  const stopDevice = (deviceId: string) => {
-    socket?.send(
-      JSON.stringify({
+  const stopDevice = useCallback(
+    (deviceId: string) => {
+      sendJsonMessage({
         topic: "devices:lobby",
         event: "stop_device",
         payload: { device_id: deviceId },
         ref: "1",
-      })
-    );
-  };
+      });
+    },
+    [sendJsonMessage]
+  );
 
-  const startCharging = (deviceId: string) => {
-    socket?.send(
-      JSON.stringify({
+  const startCharging = useCallback(
+    (deviceId: string) => {
+      sendJsonMessage({
         topic: "devices:lobby",
         event: "start_charging",
         payload: { device_id: deviceId },
         ref: "1",
-      })
-    );
-  };
+      });
+    },
+    [sendJsonMessage]
+  );
 
-  const stopCharging = (deviceId: string) => {
-    socket?.send(
-      JSON.stringify({
+  const stopCharging = useCallback(
+    (deviceId: string) => {
+      sendJsonMessage({
         topic: "devices:lobby",
         event: "stop_charging",
         payload: { device_id: deviceId },
         ref: "1",
-      })
-    );
-  };
+      });
+    },
+    [sendJsonMessage]
+  );
 
-  const getDeviceState = (deviceId: string) => {
-    socket?.send(
-      JSON.stringify({
+  const getDeviceState = useCallback(
+    (deviceId: string) => {
+      sendJsonMessage({
         topic: "devices:lobby",
         event: "get_device_state",
         payload: { device_id: deviceId },
         ref: "1",
-      })
-    );
-  };
+      });
+    },
+    [sendJsonMessage]
+  );
 
-  const setDeviceCount = (count: number) => {
-    socket?.send(
-      JSON.stringify({
+  const setDeviceCount = useCallback(
+    (count: number) => {
+      sendJsonMessage({
         topic: "devices:lobby",
         event: "set_device_count",
         payload: { count },
         ref: "1",
-      })
-    );
-  };
+      });
+    },
+    [sendJsonMessage]
+  );
 
   return (
     <WebSocketContext.Provider
       value={{
-        socket,
         connected,
         devices,
         startDevice,
@@ -199,10 +184,12 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useWebSocket = () => {
+export const useWebSocketContext = () => {
   const context = useContext(WebSocketContext);
   if (!context) {
-    throw new Error("useWebSocket must be used within a WebSocketProvider");
+    throw new Error(
+      "useWebSocketContext must be used within a WebSocketProvider"
+    );
   }
   return context;
 };

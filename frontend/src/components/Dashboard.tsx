@@ -1,7 +1,7 @@
-import { useWebSocket } from "../contexts/WebSocketContext";
+import { useWebSocketContext, Device } from "../contexts/WebSocketContext";
 
 export const Dashboard = () => {
-  const { devices, startCharging, stopCharging } = useWebSocket();
+  const { devices, startCharging, stopCharging } = useWebSocketContext();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -44,7 +44,7 @@ export const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {devices.map((device) => (
+          {devices.map((device: Device) => (
             <div
               key={device.id}
               className="rounded-lg p-4 border border-gray-200 hover:shadow-md transition-all duration-200"
