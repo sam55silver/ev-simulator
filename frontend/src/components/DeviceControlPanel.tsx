@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useWebSocketContext } from "../contexts/WebSocketContext";
 
 export const DeviceControlPanel = () => {
-  const { setDeviceCount } = useWebSocketContext();
+  const { setDeviceCount, devices, startCharging, stopCharging } =
+    useWebSocketContext();
   const [deviceCount, setLocalDeviceCount] = useState(20);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -12,6 +13,18 @@ export const DeviceControlPanel = () => {
 
   const handleSubmit = () => {
     setDeviceCount(deviceCount);
+  };
+
+  const handleStartAllCharging = () => {
+    devices.forEach((device) => {
+      startCharging(device.id);
+    });
+  };
+
+  const handleStopAllCharging = () => {
+    devices.forEach((device) => {
+      stopCharging(device.id);
+    });
   };
 
   return (
@@ -37,10 +50,24 @@ export const DeviceControlPanel = () => {
         </div>
         <button
           onClick={handleSubmit}
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors hover:cursor-pointer"
         >
           Apply Changes
         </button>
+        <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
+          <button
+            onClick={handleStartAllCharging}
+            className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors hover:cursor-pointer"
+          >
+            Start Charging All
+          </button>
+          <button
+            onClick={handleStopAllCharging}
+            className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 transition-colors hover:cursor-pointer"
+          >
+            Stop Charging All
+          </button>
+        </div>
       </div>
     </div>
   );
