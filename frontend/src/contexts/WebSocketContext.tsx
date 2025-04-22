@@ -34,10 +34,6 @@ const WebSocketContext = createContext<WebSocketContextType | null>(null);
 export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   const [devices, setDevices] = useState<Device[]>([]);
 
-  useEffect(() => {
-    console.log("Devices:", devices);
-  }, [devices]);
-
   const { sendJsonMessage, readyState } = useWebSocket(
     "ws://localhost:4000/devices/websocket",
     {
@@ -57,7 +53,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
 
         switch (data.event) {
           case "phx_reply":
-            if (data.ref === "join") {
+            if (data.payload.response.devices) {
               console.log("Received reply to join:", data.payload);
               setDevices(data.payload.response.devices);
             }

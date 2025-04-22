@@ -73,27 +73,27 @@ defmodule Supervisor.DeviceChannel do
   def handle_in("bulk_start_charging", %{"device_ids" => device_ids}, socket)
       when is_list(device_ids) do
     Enum.each(device_ids, &Supervisor.Device.start_charging/1)
-    {:reply, {:ok, %{message: "Bulk charging started"}}, socket}
+    {:reply, {:ok, %{devices: DeviceState.get_all_devices_state()}}, socket}
   end
 
   def handle_in("bulk_start_charging", %{"all" => true}, socket) do
     Registry.select(Supervisor.DeviceRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
     |> Enum.each(&Supervisor.Device.start_charging/1)
 
-    {:reply, {:ok, %{message: "Charging started for all devices"}}, socket}
+    {:reply, {:ok, %{devices: DeviceState.get_all_devices_state()}}, socket}
   end
 
   def handle_in("bulk_stop_charging", %{"device_ids" => device_ids}, socket)
       when is_list(device_ids) do
     Enum.each(device_ids, &Supervisor.Device.stop_charging/1)
-    {:reply, {:ok, %{message: "Bulk charging stopped"}}, socket}
+    {:reply, {:ok, %{devices: DeviceState.get_all_devices_state()}}, socket}
   end
 
   def handle_in("bulk_stop_charging", %{"all" => true}, socket) do
     Registry.select(Supervisor.DeviceRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
     |> Enum.each(&Supervisor.Device.stop_charging/1)
 
-    {:reply, {:ok, %{message: "Charging stopped for all devices"}}, socket}
+    {:reply, {:ok, %{devices: DeviceState.get_all_devices_state()}}, socket}
   end
 
   # Handle device updates from PubSub
