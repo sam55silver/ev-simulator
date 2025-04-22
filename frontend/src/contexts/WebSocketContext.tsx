@@ -32,10 +32,6 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
   const [devices, setDevices] = useState<Device[]>([]);
 
   useEffect(() => {
-    console.log("Devices:", devices);
-  }, [devices]);
-
-  useEffect(() => {
     const ws = new WebSocket("ws://localhost:4000/devices/websocket");
 
     ws.onopen = () => {
@@ -48,17 +44,7 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
           topic: "devices:lobby",
           event: "phx_join",
           payload: {},
-          ref: "1",
-        })
-      );
-
-      // Request initial device list
-      ws.send(
-        JSON.stringify({
-          topic: "devices:lobby",
-          event: "get_all_devices",
-          payload: {},
-          ref: "2",
+          ref: "join",
         })
       );
     };
@@ -71,28 +57,35 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      if (data.event === "device_update") {
-        // Handle individual device update
-        console.log("Received device update:", data.payload);
-        // Update the specific device in the devices array
-        setDevices((prevDevices) => {
-          const updatedDevice = data.payload;
-          const deviceExists = prevDevices.some(
-            (device) => device.id === updatedDevice.id
-          );
 
-          if (!deviceExists) {
-            return [...prevDevices, updatedDevice];
+      console.log("Received Event:", data.event);
+
+      switch (data.event) {
+        case "phx_reply":
+          if (data.ref === "join") {
+            console.log("Received reply to join:", data.payload);
+            setDevices(data.payload.response.devices);
           }
+          break;
+        case "all_devices":
+          setDevices(data.payload.devices);
+          break;
+        case "device_update":
+          setDevices((prevDevices) => {
+            const updatedDevice = data.payload;
+            const deviceExists = prevDevices.some(
+              (device) => device.id === updatedDevice.id
+            );
 
-          return prevDevices.map((device) =>
-            device.id === updatedDevice.id ? updatedDevice : device
-          );
-        });
-      } else if (data.event === "all_devices") {
-        // Handle initial devices list
-        console.log("Received all devices:", data.payload);
-        setDevices(data.payload.devices);
+            if (!deviceExists) {
+              return [...prevDevices, updatedDevice];
+            }
+
+            return prevDevices.map((device) =>
+              device.id === updatedDevice.id ? updatedDevice : device
+            );
+          });
+          break;
       }
     };
 
