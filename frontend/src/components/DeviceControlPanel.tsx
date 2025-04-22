@@ -38,7 +38,7 @@ export const DeviceControlPanel = () => {
             type="range"
             id="deviceCount"
             min="1"
-            max="1000"
+            max="2500"
             value={deviceCount}
             onChange={handleChange}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-2"
