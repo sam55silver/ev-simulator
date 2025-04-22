@@ -40,4 +40,4 @@ npm run dev
 
 One can edit `./frontend/src/components/DeviceControlPanel.tsx` line `41` to adjust the MAX number of simulated devices one can create.
 
-I tried 10,000, react broke before the Elixir Pheonix server did... Elixir is great!
+I tried 10,000, React broke before the Pheonix server did... Elixir is great!
