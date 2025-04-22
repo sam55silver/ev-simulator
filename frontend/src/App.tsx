@@ -5,8 +5,8 @@ import { DeviceControlPanel } from "./components/DeviceControlPanel";
 function App() {
   return (
     <WebSocketProvider>
-      <div className="min-h-screen bg-gray-100 py-8 px-4">
-        <div className="max-w-7xl mx-auto space-y-6">
+      <div className="min-h-screen bg-gray-100 p-8">
+        <div className="container mx-auto space-y-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
             EV Charger Simulator
           </h1>
