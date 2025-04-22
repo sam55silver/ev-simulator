@@ -6,7 +6,7 @@ A simple demonstration project that simulates an EV charger management system us
 
 ## Key Components
 
-### Backend
+### Supervisor
 1. **WebSocket Server**: Maintains connections with EV chargers
 2. **Device Registry**: Keeps track of all connected devices and their state
 3. **Scaling Manager**: Controls how many simulated devices are active
