@@ -1,7 +1,7 @@
 defmodule Supervisor.Endpoint do
   use Phoenix.Endpoint, otp_app: :supervisor
 
-  socket("/socket", Supervisor.UserSocket,
+  socket("/devices", Supervisor.UserSocket,
     websocket: true,
     longpoll: false
   )

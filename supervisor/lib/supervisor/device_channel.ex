@@ -48,6 +48,41 @@ defmodule Supervisor.DeviceChannel do
     end
   end
 
+  def handle_in("get_all_devices", _payload, socket) do
+    # Get all devices from the registry
+    devices =
+      Registry.select(Supervisor.DeviceRegistry, [
+        {{:"$1", :"$2", :"$3"}, [], [{{:"$1", :"$2", :"$3"}}]}
+      ])
+      |> Enum.map(fn {device_id, pid, _} ->
+        case Supervisor.Device.get_state(device_id) do
+          state when is_map(state) -> state
+          _ -> %{id: device_id, status: "offline"}
+        end
+      end)
+
+    {:reply, {:ok, %{devices: devices}}, socket}
+  end
+
+  def handle_in("set_device_count", %{"count" => count}, socket)
+      when is_integer(count) and count >= 0 do
+    # Stop all existing devices
+    Registry.select(Supervisor.DeviceRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
+    |> Enum.each(&Supervisor.DeviceSupervisor.stop_device/1)
+
+    # Start new devices
+    Enum.each(1..count, fn i ->
+      device_id = "device_#{i}"
+      Supervisor.DeviceSupervisor.start_device(device_id)
+    end)
+
+    {:reply, :ok, socket}
+  end
+
+  def handle_in("set_device_count", _payload, socket) do
+    {:reply, {:error, %{reason: "Invalid count parameter"}}, socket}
+  end
+
   # Handle device updates from PubSub
   def handle_info({:device_update, state}, socket) do
     push(socket, "device_update", state)
