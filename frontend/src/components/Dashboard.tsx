@@ -1,7 +1,8 @@
 import { useWebSocketContext, Device } from "../contexts/WebSocketContext";
 
 export const Dashboard = () => {
-  const { devices, startCharging, stopCharging } = useWebSocketContext();
+  const { devices, startCharging, stopCharging, connected } =
+    useWebSocketContext();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -104,14 +105,28 @@ export const Dashboard = () => {
           ))}
         </div>
 
-        {devices.length === 0 && (
+        {!connected && (
+          <div className="text-center py-8">
+            <div className="text-gray-400 text-3xl mb-3">🔌</div>
+            <h3 className="text-base font-medium text-gray-900 mb-1">
+              Connection Lost
+            </h3>
+            <p className="text-sm text-gray-500">
+              Unable to connect to the charging network. Please check your
+              connection and try again.
+            </p>
+          </div>
+        )}
+
+        {connected && devices.length === 0 && (
           <div className="text-center py-8">
             <div className="text-gray-400 text-3xl mb-3">⚡</div>
             <h3 className="text-base font-medium text-gray-900 mb-1">
               No Charging Stations Connected
             </h3>
             <p className="text-sm text-gray-500">
-              Waiting for devices to come online...
+              Adjust and apply the number of devices in the control panel to get
+              started.
             </p>
           </div>
         )}
