@@ -25,7 +25,7 @@ export const Dashboard = () => {
     <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-900">
-          EV Charging Stations
+          EV Charging Stations ({devices.length})
         </h2>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">

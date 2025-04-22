@@ -89,8 +89,8 @@ defmodule Supervisor.Device do
   # Private Functions
 
   defp schedule_power_update do
-    # Update every 5 seconds
-    Process.send_after(self(), :update_power, 5000)
+    # Update every 200 milliseconds
+    Process.send_after(self(), :update_power, 200)
   end
 
   defp via_tuple(device_id) do
