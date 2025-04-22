@@ -56,6 +56,15 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
             if (data.payload.response.devices) {
               console.log("Received reply to join:", data.payload);
               setDevices(data.payload.response.devices);
+            } else if (data.payload.response.device) {
+              console.log("Received reply to get_device_state:", data.payload);
+              setDevices((prevDevices) =>
+                prevDevices.map((device) =>
+                  device.id === data.payload.response.device.id
+                    ? data.payload.response.device
+                    : device
+                )
+              );
             }
             break;
           case "all_devices":

@@ -31,12 +31,12 @@ defmodule Supervisor.DeviceChannel do
 
   def handle_in("start_charging", %{"device_id" => device_id}, socket) do
     Supervisor.Device.start_charging(device_id)
-    {:reply, :ok, socket}
+    {:reply, {:ok, %{device: Supervisor.Device.get_state(device_id)}}, socket}
   end
 
   def handle_in("stop_charging", %{"device_id" => device_id}, socket) do
     Supervisor.Device.stop_charging(device_id)
-    {:reply, :ok, socket}
+    {:reply, {:ok, %{device: Supervisor.Device.get_state(device_id)}}, socket}
   end
 
   def handle_in("get_device_state", %{"device_id" => device_id}, socket) do
